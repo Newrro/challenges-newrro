@@ -14,8 +14,11 @@ import {
   PDF_URL,
   STAGES,
   TEAMS,
+  showLaunchScreen,
 } from './data'
 import { Furrows } from './Furrows'
+import { LaunchGate } from './LaunchGate'
+import { Petals } from './Petals'
 import { ModuleSwap } from './ModuleSwap'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -49,12 +52,13 @@ function useNow(intervalMs = 1000) {
   return now
 }
 
-function Countdown() {
+function Countdown({ launched }: { launched: boolean }) {
   const now = useNow()
   const diff = LAUNCH_AT.getTime() - now
   const launchEnd = LAUNCH_AT.getTime() + 2 * 24 * 3600 * 1000
 
-  if (diff <= 0) {
+  // Pressing the launch button ends the countdown early, whatever the clock says.
+  if (diff <= 0 || launched) {
     return (
       <p className="countdown countdown-live">
         <span className="live-dot" />
@@ -115,7 +119,7 @@ function Header() {
   )
 }
 
-function Hero() {
+function Hero({ launched }: { launched: boolean }) {
   const reduce = useReducedMotion()
   const { scrollY } = useScroll()
   const titleY = useTransform(scrollY, [0, 600], [0, reduce ? 0 : 90])
@@ -169,7 +173,7 @@ function Hero() {
           transition={{ duration: 1.2, delay: 0.35, ease }}
         />
         <Furrows />
-        <Countdown />
+        <Countdown launched={launched} />
         <ul className="hero-modules" aria-label="The seven modules">
           {MODULES.map((m, i) => (
             <motion.li
@@ -620,25 +624,42 @@ function Footer() {
 }
 
 export default function App() {
+  const [gate, setGate] = useState<'waiting' | 'revealing' | 'done'>(() => (showLaunchScreen() ? 'waiting' : 'done'))
+  const [launched, setLaunched] = useState(false)
+
   return (
     <>
-      <a className="skip" href="#modules">
-        Skip to the modules
-      </a>
-      <Header />
-      <main>
-        <Hero />
-        <Question />
-        <Kits />
-        <Modules />
-        <Leagues />
-        <FarmDay />
-        <Timeline />
-        <Awards />
-        <Enter />
-        <Closing />
-      </main>
-      <Footer />
+      {gate !== 'done' && (
+        <LaunchGate
+          onLaunched={() => {
+            setLaunched(true)
+            setGate('revealing')
+          }}
+          onGone={() => setGate('done')}
+        />
+      )}
+      {gate !== 'waiting' && (
+        <>
+          <a className="skip" href="#modules">
+            Skip to the modules
+          </a>
+          <Header />
+          <main>
+            <Hero launched={launched} />
+            <Question />
+            <Kits />
+            <Modules />
+            <Leagues />
+            <FarmDay />
+            <Timeline />
+            <Awards />
+            <Enter />
+            <Closing />
+          </main>
+          <Footer />
+        </>
+      )}
+      {launched && <Petals />}
     </>
   )
 }

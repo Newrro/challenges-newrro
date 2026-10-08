@@ -8,6 +8,18 @@ export const PDF_PAGES = 21
 // Proposed launch: 9–10 October 2026, IST.
 export const LAUNCH_AT = new Date('2026-10-09T09:30:00+05:30')
 
+// Launch-ceremony screen with the big launch button.
+//   'url'      – only at /?launch (for the event); everyone else sees the site directly
+//   'everyone' – every visitor sees the launch screen first
+//   'off'      – never shown, not even at /?launch
+export const LAUNCH_SCREEN: 'url' | 'everyone' | 'off' = 'url'
+
+export function showLaunchScreen() {
+  if (LAUNCH_SCREEN === 'off') return false
+  if (LAUNCH_SCREEN === 'everyone') return true
+  return new URLSearchParams(window.location.search).has('launch')
+}
+
 export type KitKind = 'kit1' | 'mixed' | 'kit2'
 
 export const KIT_LABEL: Record<KitKind, string> = {
